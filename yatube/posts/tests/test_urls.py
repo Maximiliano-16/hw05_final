@@ -43,11 +43,13 @@ class PostURLTests(TestCase):
         urls_exists = {
             self.guest_client.get('/'): HTTPStatus.OK,
             self.guest_client.get('/group/test-slug/'): HTTPStatus.OK,
-        #   self.guest_client.get('/profile/Guest/'): HTTPStatus.OK,
+            self.guest_client.get
+            (f'/profile/{self.user.username}/'): HTTPStatus.OK,
             self.guest_client.get(f'/posts/{post_id}/'): HTTPStatus.OK,
             self.guest_client.get('/unexisting_page/'): HTTPStatus.NOT_FOUND,
             self.authorized_client.get('/create/'): HTTPStatus.OK,
             self.author_client.get(f'/posts/{post_id}/edit/'): HTTPStatus.OK,
+            self.authorized_client.get('/follow/'): HTTPStatus.OK,
 
         }
         for address, answer in urls_exists.items():

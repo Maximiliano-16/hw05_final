@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import PostForm, CommentForm
 
-from .models import Group, Post, Comment, Follow
+from .models import Group, Post, Follow
 
 User = get_user_model()
 
@@ -18,14 +18,12 @@ def index(request):
     paginator = Paginator(post_list, posts_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    # В словаре context отправляем информацию в шаблон
     context = {
         'page_obj': page_obj,
     }
     return render(request, 'posts/index.html', context)
 
 
-# Страница с постами отфильтроваными по группам
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     post_list = Post.objects.filter(group=group)
@@ -47,8 +45,8 @@ def profile(request, username):
     paginator = Paginator(post_list, posts_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    following = Follow.objects.filter(
-        user=request.user, author=author).exists()
+    following = (request.user.is_authenticated and author.following.filter(
+        user=request.user).exists())
 
     context = {
         'author': author,
@@ -62,8 +60,6 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST)
-    # get_comments = get_object_or_404(Comment, pk=post_id)
-    # comments = get_comments.objects.filter(post=post_id)
     comments = post.comments.all()
 
     context = {

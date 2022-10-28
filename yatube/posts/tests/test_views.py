@@ -181,6 +181,7 @@ class PostPagesTests(TestCase):
 
     def test_auth_user_can_unsubscribe_from_other_users(self):
         Follow.objects.create(user=self.user, author=self.user2)
+
         follow = Follow.objects.filter(user=self.user,
                                        author=self.user2).count()
         self.assertEqual(follow, 1)
