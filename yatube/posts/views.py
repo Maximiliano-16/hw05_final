@@ -4,9 +4,8 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import PostForm, CommentForm
-
-from .models import Group, Post, Follow
+from .forms import CommentForm, PostForm
+from .models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -14,7 +13,7 @@ posts_per_page = 10
 
 
 def index(request):
-    post_list = Post.objects.all()
+    post_list = Post.objects.select_related('author', 'group').all()
     paginator = Paginator(post_list, posts_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -106,7 +105,6 @@ def post_edit(request, post_id):
 
 @login_required
 def add_comment(request, post_id):
-    # Получите пост
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
@@ -133,19 +131,18 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     user = request.user
-    author = User.objects.get(username=username)
-    is_follower = Follow.objects.filter(user=user, author=author)
-    print(is_follower)
-    if user != author and not is_follower.exists():
-        Follow.objects.create(user=user, author=author)
+    author = get_object_or_404(User, username=username)
+    if user.username == username:
+        return redirect('posts:profile', username=username)
+    Follow.objects.get_or_create(user=user, author=author)
+
     return redirect('posts:profile', username=author)
 
 
 @login_required
 def profile_unfollow(request, username):
-    # Дизлайк, отписка
     user = request.user
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     is_follower = Follow.objects.filter(user=user, author=author)
     is_follower.delete()
     return redirect('posts:profile', username=author)

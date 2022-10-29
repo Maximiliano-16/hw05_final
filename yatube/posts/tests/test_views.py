@@ -1,11 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
-from django.urls import reverse
 from django import forms
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase
+from django.urls import reverse
 
-from ..models import Post, Group, Follow, Comment
+from ..models import Comment, Follow, Group, Post
 
 User = get_user_model()
 
@@ -173,22 +173,22 @@ class PostPagesTests(TestCase):
             self.assertEqual(first_object_post.author, self.post.author)
             self.assertEqual(first_object_post.group, self.post.group)
 
-    def test_auth_user_can_subscribe_on_other_users(self):
-        Follow.objects.create(user=self.user2, author=self.user)
-        follower = Follow.objects.filter(user=self.user2,
-                                         author=self.user).count()
-        self.assertEqual(follower, 1)
+    def test_auth_user_can_not_subscribe_on_yourself(self):
+        response = self.authorized_client.post(
+            f'/profile/{self.user.username}/follow/')
+        self.assertRedirects(
+            response, f'/profile/{self.user.username}/'
+        )
 
-    def test_auth_user_can_unsubscribe_from_other_users(self):
-        Follow.objects.create(user=self.user, author=self.user2)
-
-        follow = Follow.objects.filter(user=self.user,
-                                       author=self.user2).count()
-        self.assertEqual(follow, 1)
-
-        follow2 = Follow.objects.filter(user=self.user2,
-                                        author=self.user).count()
-        self.assertEqual(follow2, 0)
+    def test_auth_user_can_subscribe_and_unsubscribe_on_other_users(self):
+        self.authorized_client.post(
+            f'/profile/{self.user2.username}/follow/')
+        count = Follow.objects.all().count()
+        self.assertEqual(count, 1)
+        self.authorized_client.post(
+            f'/profile/{self.user2.username}/unfollow/')
+        count2 = Follow.objects.all().count()
+        self.assertEqual(count2, 0)
 
     def test_post_appears_in_subscribers(self):
         Follow.objects.create(user=self.user, author=self.user2)

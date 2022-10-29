@@ -6,7 +6,7 @@
 {% endblock %}
 {% block header %}Последние обновления на сайте{% endblock %}
 {% block content %}
-    {% include 'includes/switcher.html' %}
+    {% include 'posts/includes/switcher.html' %}
     {% cache 20 index_page %}
         <main>
             <!-- класс py-5 создает отступы сверху и снизу блока -->
@@ -42,8 +42,3 @@
         </main>
     {% endcache %}
 {% endblock %}
-<!-- Использованы классы бустрапа: -->
-<!-- border-top: создаёт тонкую линию сверху блока -->
-<!-- text-center: выравнивает текстовые блоки внутри блока по центру -->
-<!-- py-3: контент внутри размещается с отступом сверху и снизу -->
-
