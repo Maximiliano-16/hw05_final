@@ -6,7 +6,7 @@
 {% endblock %}
 {% block header %}Последние обновления на сайте{% endblock %}
 {% block content %}
-    {% include 'posts/includes/switcher.html' %}
+    {% include 'posts/includes/switcher.html' with index=True %}
     {% cache 20 index_page %}
         <main>
             <!-- класс py-5 создает отступы сверху и снизу блока -->

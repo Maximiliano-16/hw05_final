@@ -173,33 +173,72 @@ class PostPagesTests(TestCase):
             self.assertEqual(first_object_post.author, self.post.author)
             self.assertEqual(first_object_post.group, self.post.group)
 
-    def test_auth_user_can_not_subscribe_on_yourself(self):
-        response = self.authorized_client.post(
-            f'/profile/{self.user.username}/follow/')
-        self.assertRedirects(
-            response, f'/profile/{self.user.username}/'
+
+class FollowViewTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.post_author = User.objects.create_user(username='post_author')
+        cls.post_follower = User.objects.create_user(username='post_follower')
+        cls.post = Post.objects.create(
+            text='Тестовый текст для подписки',
+            author=cls.post_author,
         )
 
-    def test_auth_user_can_subscribe_and_unsubscribe_on_other_users(self):
-        self.authorized_client.post(
-            f'/profile/{self.user2.username}/follow/')
-        count = Follow.objects.all().count()
-        self.assertEqual(count, 1)
-        self.authorized_client.post(
-            f'/profile/{self.user2.username}/unfollow/')
-        count2 = Follow.objects.all().count()
-        self.assertEqual(count2, 0)
+    def setUp(self):
+        cache.clear()
+        self.author_client = Client()
+        self.author_client.force_login(self.post_author)
+        self.follower_client = Client()
+        self.follower_client.force_login(self.post_follower)
+
+    def test_auth_user_can_subscribe_on_users(self):
+        Follow.objects.create(
+            user=self.post_follower,
+            author=self.post_author
+        )
+        follow = Follow.objects.filter(
+            user=self.post_follower,
+            author=self.post_author,
+        )
+        self.assertTrue(follow.exists())
+
+    def test_auth_user_can_unsubscribe_on_users(self):
+        Follow.objects.create(
+            user=self.post_follower,
+            author=self.post_author
+        )
+        self.follower_client.post(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': self.post_author.username}))
+        follow2 = Follow.objects.filter(
+            user=self.post_follower,
+            author=self.post_author
+        )
+        self.assertFalse(follow2.exists())
 
     def test_post_appears_in_subscribers(self):
-        Follow.objects.create(user=self.user, author=self.user2)
-        follow_index = self.authorized_client.get(reverse(
+        post = Post.objects.create(
+            author=self.post_author,
+            text='Подпишись на меня'
+        )
+        Follow.objects.create(
+            user=self.post_follower,
+            author=self.post_author
+        )
+        follow_index = self.follower_client.get(reverse(
             'posts:follow_index'))
-        self.assertIn(self.post.text, follow_index.content.decode())
+        self.assertIn(post.text, follow_index.content.decode())
 
     def test_post_not_appears_in_subscribers(self):
-        follow_index = self.authorized_client.get(reverse(
+        post = Post.objects.create(
+            author=self.post_author,
+            text='Подпишись на меня'
+        )
+        follow_index = self.follower_client.get(reverse(
             'posts:follow_index'))
-        self.assertIn(self.post.text, follow_index.content.decode())
+        self.assertNotIn(post.text, follow_index.content.decode())
 
 
 class PaginatorViewsTest(TestCase):

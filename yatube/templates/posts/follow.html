@@ -6,7 +6,7 @@
 {% endblock %}
 {% block header %}Последние обновления на сайте{% endblock %}
 {% block content %}
-    {% include 'posts/includes/switcher.html' %}
+    {% include 'posts/includes/switcher.html' with follow=True %}
     {% cache 20 index_page %}
         <main>
             <div class="container py-5">
@@ -41,8 +41,3 @@
         </main>
     {% endcache %}
 {% endblock %}
-<!-- Использованы классы бустрапа: -->
-<!-- border-top: создаёт тонкую линию сверху блока -->
-<!-- text-center: выравнивает текстовые блоки внутри блока по центру -->
-<!-- py-3: контент внутри размещается с отступом сверху и снизу -->
-
