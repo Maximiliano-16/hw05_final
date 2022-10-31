@@ -193,30 +193,27 @@ class FollowViewTest(TestCase):
         self.follower_client.force_login(self.post_follower)
 
     def test_auth_user_can_subscribe_on_users(self):
+        count_follow = Follow.objects.count()
         Follow.objects.create(
             user=self.post_follower,
             author=self.post_author
         )
-        follow = Follow.objects.filter(
-            user=self.post_follower,
-            author=self.post_author,
-        )
-        self.assertTrue(follow.exists())
+        follow = Follow.objects.all().latest('id')
+        self.assertEqual(Follow.objects.count(), count_follow + 1)
+        self.assertEqual(follow.author_id, self.post_author.id)
+        self.assertEqual(follow.user_id, self.post_follower.id)
 
     def test_auth_user_can_unsubscribe_on_users(self):
         Follow.objects.create(
             user=self.post_follower,
             author=self.post_author
         )
+        count_follow = Follow.objects.count()
         self.follower_client.post(
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.post_author.username}))
-        follow2 = Follow.objects.filter(
-            user=self.post_follower,
-            author=self.post_author
-        )
-        self.assertFalse(follow2.exists())
+        self.assertEqual(Follow.objects.count(), count_follow - 1)
 
     def test_post_appears_in_subscribers(self):
         post = Post.objects.create(
