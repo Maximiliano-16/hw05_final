@@ -194,9 +194,11 @@ class FollowViewTest(TestCase):
 
     def test_auth_user_can_subscribe_on_users(self):
         count_follow = Follow.objects.count()
-        Follow.objects.create(
-            user=self.post_follower,
-            author=self.post_author
+        self.author_client.post(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.post_author.username}
+            )
         )
         follow = Follow.objects.all().latest('id')
         self.assertEqual(Follow.objects.count(), count_follow + 1)
