@@ -194,7 +194,7 @@ class FollowViewTest(TestCase):
 
     def test_auth_user_can_subscribe_on_users(self):
         count_follow = Follow.objects.count()
-        self.author_client.post(
+        self.follower_client.post(
             reverse(
                 'posts:profile_follow',
                 kwargs={'username': self.post_author.username}
